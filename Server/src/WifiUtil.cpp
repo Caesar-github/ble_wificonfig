@@ -274,14 +274,16 @@ bool checkWifiIsConnected(){
 std::string WifiUtil::getWifiListJson(){
     char ret_buff[MSG_BUFF_LEN] = {0};
     std::string ret;
+    int retry_count = 3;
 
     LIST_STRING wifiStringList;
     LIST_WIFIINFO wifiInfoList;
 
+retry:
     execute("wpa_cli -iwlan0 scan",ret_buff);
     /* wap_cli sacn is useable */
     if(!strncmp(ret_buff,"OK",2)){
-        log_info("scan useable: OKOK \n");
+        log_info("scan useable: OKOK\n");
         execute("wpa_cli -iwlan0 scan_r",ret_buff);
         wifiStringList = charArrayToList(ret_buff);
         wifiInfoList = wifiStringFormat(wifiStringList);
@@ -289,6 +291,10 @@ std::string WifiUtil::getWifiListJson(){
     // parse wifiInfo list into json.
     ret = parseIntoJson(wifiInfoList);
     log_info("list size: %d\n",wifiInfoList.size());
+    if ((wifiInfoList.size() == 0)  && (--retry_count > 0)) {
+        usleep(500*1000);
+	goto retry;
+    }
     return ret;
 }
 

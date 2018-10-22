@@ -64,7 +64,7 @@
 #define NOTIFY_CHAR_UUID         "8AC32D3f-5CB9-4D44-BEC2-EE689169F626"
 #define NOTIFY_DESC_UUID         "00002902-0000-1000-8000-00805f9b34fb"
 #define WIFILIST_CHAR_UUID       "8AC32D3f-5CB9-4D44-BEC2-EE689169F627"
-#define DEVICECONTEXT_CHAR_UUID       "8AC32D3f-5CB9-4D44-BEC2-EE689169F628"
+#define DEVICECONTEXT_CHAR_UUID  "8AC32D3f-5CB9-4D44-BEC2-EE689169F628"
 
 #define BT_NAME                  "Yami"
 
@@ -900,7 +900,7 @@ static gboolean check_wifi_isconnected()
 
         }
         
-        if (!isWifiConnected) 
+        if (!isWifiConnected)
             printf("wifi is not connected.\n");            
     
         return isWifiConnected;
@@ -957,6 +957,7 @@ static DBusMessage *chr_read_value(DBusConnection *conn, DBusMessage *msg,
 	DBusMessage *reply;
 	DBusMessageIter iter;
 	const char *device;
+        static char *slist = NULL;
 
 	if (!dbus_message_iter_init(msg, &iter))
 		return g_dbus_create_error(msg, DBUS_ERROR_INVALID_ARGS,
@@ -973,23 +974,28 @@ static DBusMessage *chr_read_value(DBusConnection *conn, DBusMessage *msg,
 
 	dbus_message_iter_init_append(reply, &iter);
 
-        if (!strcmp(WIFILIST_CHAR_UUID, chr->uuid)){
-		#if 0
-		char alp[1024] = {"\0"};
-		memcpy(alp, "this is a fake wifilist, thanks you", 30);
+        if (!strcmp(WIFILIST_CHAR_UUID, chr->uuid)) {
+		if (!slist) {
+                	slist = get_wifi_list();
+			printf("%s: wifi total list is  %s, len=%d\n", __func__, slist, strlen(slist));
+		}
+                int len;
+		char *tmp = slist;
 
-		chr_write(chr, alp, 1024);
+                assert(!slist);
+                len = strlen(slist);
 
-                printf("%s: wifi list is  %s\n", __func__, alp);
-		#else
-		char *list = get_wifi_list();
-		assert(!list);
-		chr_write(chr, list, strlen(list));
-		printf("%s: wifi list is  %s, len=%d\n", __func__, list, strlen(list));
-		free(list);
-		#endif
+                chr_write(chr, slist, (len > 512) ? 512 : len);
+
+		if (len > 512) {
+			slist = strdup(slist + 512);
+			free(tmp);
+		} else {
+			free(slist);
+			slist = NULL;
+		}
+
         }
-
 	if (!strcmp(DEVICECONTEXT_CHAR_UUID, chr->uuid)) {
 		char *list = get_device_context();
 		printf("%s device context: %s\n", __func__, list);
@@ -1039,9 +1045,9 @@ static DBusMessage *chr_write_value(DBusConnection *conn, DBusMessage *msg,
 
     //chr_write(chr, "1111111111", 10);
 #else
-	chr_write(chr, value, len);
-	chr->value[len] = '\0';
-	printf("chr_write_value  %s, %d\n", chr->value, len);
+	//chr_write(chr, value, len);
+	//chr->value[len] = '\0';
+	printf("chr_write_value  %p, %d\n", chr->value, len);
         if (!strcmp(SSID_CHAR_UUID, chr->uuid)){                
                 strcpy(wifi_ssid, chr->value);
                 printf("wifi ssid is  %s\n", wifi_ssid);
