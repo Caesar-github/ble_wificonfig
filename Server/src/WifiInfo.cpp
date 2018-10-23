@@ -45,8 +45,8 @@ void WifiInfo::addJsonToRoot(rapidjson::Document &document,rapidjson::Value &roo
 
     //object.AddMember("bssid",rapidjson::StringRef(m_bssid.c_str()),document.GetAllocator());
     //object.AddMember("frequency", rapidjson::StringRef(m_frequency.c_str()), document.GetAllocator());
-    //object.AddMember("level", rapidjson::StringRef(m_signalLevel.c_str()), document.GetAllocator());
-    //object.AddMember("flags", rapidjson::StringRef(m_flags.c_str()), document.GetAllocator());
+    object.AddMember("level", rapidjson::StringRef(m_signalLevel.c_str()), document.GetAllocator());
+    object.AddMember("flags", rapidjson::StringRef(m_flags.c_str()), document.GetAllocator());
     object.AddMember("id", rapidjson::StringRef(m_ssid.c_str()), document.GetAllocator());
 
     root.PushBack(object, document.GetAllocator());
