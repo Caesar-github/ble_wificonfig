@@ -1045,8 +1045,8 @@ static DBusMessage *chr_write_value(DBusConnection *conn, DBusMessage *msg,
 
     //chr_write(chr, "1111111111", 10);
 #else
-	//chr_write(chr, value, len);
-	//chr->value[len] = '\0';
+	chr_write(chr, value, len);
+	chr->value[len] = '\0';
 	printf("chr_write_value  %p, %d\n", chr->value, len);
         if (!strcmp(SSID_CHAR_UUID, chr->uuid)){                
                 strcpy(wifi_ssid, chr->value);

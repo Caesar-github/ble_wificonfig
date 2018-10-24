@@ -22,7 +22,7 @@
 
 #define WIFI_CONFIG_MAX 240
 
-#define DEVICE_CONFIG_FILE "/data/device_info.json"
+#define DEVICE_CONFIG_FILE "/data/property.txt"
 class WifiUtil{
 
 public:
