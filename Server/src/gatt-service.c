@@ -1034,21 +1034,25 @@ static DBusMessage *chr_write_value(DBusConnection *conn, DBusMessage *msg,
 	//chr_write(chr, value, len);
 
 #ifdef DUEROS
-    printf("chr_write_value, len: %d\n", len);
-    for(int i = 0; i < len; i++)
-        printf("%02x ", value[i]);
-    printf("\n\n");
-        
-    if (!strcmp(DUEROS_CHARACTERISTIC_UUID, chr->uuid)) {
-        dueros_socket_send((char *) value, len);
-    }
+	printf("chr_write_value, len: %d\n", len);
+	for(int i = 0; i < len; i++)
+		printf("%02x ", value[i]);
+	printf("\n\n");
 
-    //chr_write(chr, "1111111111", 10);
+	if (!strcmp(DUEROS_CHARACTERISTIC_UUID, chr->uuid)) {
+		dueros_socket_send((char *) value, len);
+	}
+
+	//chr_write(chr, "1111111111", 10);
 #else
 	chr_write(chr, value, len);
+	if(len == 0 || chr->value == NULL) {
+		printf("chr_write_value is null\n");
+		return dbus_message_new_method_return(msg);
+	}
 	chr->value[len] = '\0';
 	printf("chr_write_value  %p, %d\n", chr->value, len);
-        if (!strcmp(SSID_CHAR_UUID, chr->uuid)){                
+	if (!strcmp(SSID_CHAR_UUID, chr->uuid)){
                 strcpy(wifi_ssid, chr->value);
                 printf("wifi ssid is  %s\n", wifi_ssid);
         }
