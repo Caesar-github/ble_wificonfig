@@ -678,6 +678,18 @@ static int parse_options(DBusMessageIter *iter, const char **device)
 	return 0;
 }
 
+void check_ssid() {
+        char temp[1024];
+        int j = 0;
+        for(int i = 0; i < strlen(wifi_ssid); i++) {
+                temp[j++] = '\\';
+                temp[j++] = wifi_ssid[i];
+        }
+        strcpy(wifi_ssid, temp);
+
+        printf("check_ssid: %s\n", wifi_ssid);
+}
+
 void execute(const char cmdline[],char recv_buff[]){
     printf("consule_run: %s\n",cmdline);
 
@@ -752,6 +764,8 @@ static gboolean config_wifi() {
     }
     
     // 2. setNetWorkSSID
+    if (wifi_ssid != NULL)
+        check_ssid();
     memset(cmdline, 0, sizeof(cmdline));
     sprintf(cmdline,"wpa_cli -iwlan0 set_network %d ssid \\\"%s\\\"",id, wifi_ssid);
     printf("%s\n", cmdline);
