@@ -10,4 +10,4 @@ add_subdirectory("ThirdParty")
 add_subdirectory("Server")
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/ap_notification DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(FILES ${CMAKE_SOURCE_DIR}/bt_realtek_wificonfig DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(PROGRAMS ${CMAKE_SOURCE_DIR}/bt_realtek_wificonfig DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

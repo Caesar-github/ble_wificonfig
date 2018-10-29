@@ -964,6 +964,7 @@ static int wifi_config_thread_cancel(void)
     return 0;
 }
 
+#define BLE_SEND_MAX_LEN (184) //(134) //(20) //(512)
 static DBusMessage *chr_read_value(DBusConnection *conn, DBusMessage *msg,
 							void *user_data)
 {
@@ -972,6 +973,7 @@ static DBusMessage *chr_read_value(DBusConnection *conn, DBusMessage *msg,
 	DBusMessageIter iter;
 	const char *device;
         static char *slist = NULL;
+        static char *devicesn = NULL;
 
 	if (!dbus_message_iter_init(msg, &iter))
 		return g_dbus_create_error(msg, DBUS_ERROR_INVALID_ARGS,
@@ -996,26 +998,37 @@ static DBusMessage *chr_read_value(DBusConnection *conn, DBusMessage *msg,
                 int len;
 		char *tmp = slist;
 
-                assert(!slist);
                 len = strlen(slist);
 
-                chr_write(chr, slist, (len > 512) ? 512 : len);
+                chr_write(chr, slist, (len > BLE_SEND_MAX_LEN) ? BLE_SEND_MAX_LEN : len);
 
-		if (len > 512) {
-			slist = strdup(slist + 512);
+		if (len > BLE_SEND_MAX_LEN) {
+			slist = strdup(slist + BLE_SEND_MAX_LEN);
 			free(tmp);
 		} else {
 			free(slist);
 			slist = NULL;
 		}
-
         }
 	if (!strcmp(DEVICECONTEXT_CHAR_UUID, chr->uuid)) {
-		char *list = get_device_context();
-		printf("%s device context: %s\n", __func__, list);
-		assert(!list);
-		chr_write(chr, list, strlen(list));
-		free(list);
+                if (!devicesn) {
+			devicesn = get_device_context();
+			printf("%s device context: %s\n", __func__, devicesn);
+                }
+                int len;
+                char *tmp = devicesn;
+
+                len = strlen(devicesn);
+
+                chr_write(chr, devicesn, (len > BLE_SEND_MAX_LEN) ? BLE_SEND_MAX_LEN : len);
+
+                if (len > BLE_SEND_MAX_LEN) {
+                        devicesn = strdup(devicesn + BLE_SEND_MAX_LEN);
+                        free(tmp);
+                } else {
+                        free(devicesn);
+                        devicesn = NULL;
+                }
 	}
 
 	chr_read(chr, &iter);
