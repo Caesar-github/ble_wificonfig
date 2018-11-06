@@ -18,7 +18,7 @@ void execute(const char cmdline[],char recv_buff[]){
     FILE *stream = NULL;
     char buff[1024];
 
-    memset(recv_buff, 0, sizeof(recv_buff));
+    memset(recv_buff, 0, strlen(recv_buff));
     if((stream = popen(cmdline,"r"))!=NULL){
         while(fgets(buff,1024,stream)){
             strcat(recv_buff,buff);
@@ -280,16 +280,17 @@ std::string WifiUtil::getWifiListJson(){
     LIST_WIFIINFO wifiInfoList;
 
 retry:
-    execute("wpa_cli -i wlan0 scan", ret_buff);
+    execute("wpa_cli -i wlan0 -p /var/run/wpa_supplicant scan", ret_buff);
     /* wap_cli sacn is useable */
     if(!strncmp(ret_buff,"OK",2)){
         log_info("scan useable: OKOK\n");
-        execute("wpa_cli -i wlan0 scan_r", ret_buff);
+        execute("wpa_cli -i wlan0 -p /var/run/wpa_supplicant scan_r", ret_buff);
         wifiStringList = charArrayToList(ret_buff);
         wifiInfoList = wifiStringFormat(wifiStringList);
     }
     
     if ((wifiInfoList.size() == 0)  && (--retry_count > 0)) {
+	usleep(500000);
         goto retry;
     }
     // parse wifiInfo list into json.
