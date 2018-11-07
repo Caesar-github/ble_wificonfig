@@ -67,6 +67,7 @@
 #define DEVICECONTEXT_CHAR_UUID  "8AC32D3f-5CB9-4D44-BEC2-EE689169F628"
 
 #define BT_NAME                  "Yami"
+static char reconnect_path[66];
 
 #ifdef DUEROS
 #define DUEROS_WIFI_SERVICES_UUID       "00001111-0000-1000-8000-00805f9b34fb"
@@ -923,8 +924,19 @@ static gboolean config_wifi() {
 
     //execute("wpa_cli save_config", buff);
     //execute("wpa_cli reconfig", buff);
-    execute("wpa_cli reconnect", buff);
-    
+    memset(cmdline, 0, sizeof(cmdline));
+    sprintf(cmdline,"wpa_cli -i wlan0 select_network %d", id);
+    memset(reconnect_path, 0, 66);
+    strcpy(reconnect_path, cmdline);
+    printf("repath: %s.\n", reconnect_path);
+    printf("%s\n", cmdline);
+    execute(cmdline,buff);
+    execute_result = !strncmp(buff,"OK",2);        
+    if(!execute_result){
+        perror("select_network failed.\n");
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -934,10 +946,15 @@ static bool save_wifi_config(int mode)
     char cmdline[256] = {0};
     
    //7. save config
-    if (mode == 1)
+    if (mode == 1) {
         execute("wpa_cli save_config", buff);
-    else 
+        execute("wpa_cli reconfigure", buff);
+    } else { 
         execute("wpa_cli flush", buff);
+	usleep(600000);
+        execute("wpa_cli reconfigure", buff);
+        execute("wpa_cli reconnect", buff);
+    }
     return 0;
  /*
     if (mode == 1){
@@ -991,6 +1008,8 @@ static gboolean check_wifi_isconnected()
         char temp_buff[256] = {0};
         gboolean isWifiConnected = FALSE;
 	int retry = 1;
+	char *str = NULL;
+	char *str1 = NULL;
 
 reconnect:
         for(int i = 0; i < 20; i++) {
@@ -999,7 +1018,7 @@ reconnect:
             execute("wpa_cli -iwlan0 status | grep wpa_state", ret_buff);
             strncpy(temp_buff, ret_buff+10, strlen(ret_buff) - 11);
             printf("wpa_cli status %s\n", temp_buff);
-            
+
             if (strncmp(temp_buff, "COMPLETED", 9) == 0) {
                 usleep(500000);
                 execute("wpa_cli -iwlan0 status | grep ip_address", ret_buff);
@@ -1009,6 +1028,16 @@ reconnect:
                 
                     if ((strncmp(temp_buff, "127.0.0.1", 9) != 0) && (strncmp(temp_buff, "169", 3) != 0)) {
                     //if (strncmp(temp_buff, "127.0.0.1", 9) != 0) {
+			memset(ret_buff, 0, 256);
+			memset(temp_buff, 0, 256);
+			execute("wpa_cli -iwlan0 status | grep ssid", ret_buff);
+			if ((str = strstr(ret_buff, "bssid"))) {
+			    str1 = strstr(str+5, "ssid");
+			    strncpy(temp_buff, str1+5, strlen(wifi_ssid_bk));
+			    printf("wpa_cli ssid %s %d\n", temp_buff, strlen(wifi_ssid_bk));
+			    if (strncmp(temp_buff, wifi_ssid_bk, strlen(wifi_ssid_bk)) != 0)
+				return FALSE;
+			}
                         isWifiConnected = TRUE;
                         printf("wifi is connected.\n");
                         break;
@@ -1016,12 +1045,12 @@ reconnect:
                 }
             }
             if (strncmp(temp_buff, "DISCONNECTED", 12) == 0)
-                execute("wpa_cli reconnect", temp_buff);
+                execute(reconnect_path, temp_buff);
 
         }
 
         if ((!isWifiConnected) && (retry-- > 0)) {
-		execute("wpa_cli reconnect", ret_buff);
+		execute(reconnect_path, ret_buff);
 		goto reconnect;
 	}
 
@@ -1219,7 +1248,7 @@ static DBusMessage *chr_write_value(DBusConnection *conn, DBusMessage *msg,
                 strcpy(wifi_ssid, str);
                 strcpy(wifi_ssid_bk, str);
                 saveCheckdata(2, wifi_ssid_bk);
-                printf("wifi ssid is  %s\n", wifi_ssid);
+                printf("wifi ssid is  %s, bk: %s\n", wifi_ssid, wifi_ssid_bk);
         }
         if (!strcmp(PASSWORD_CHAR_UUID, chr->uuid)){
                 strcpy(wifi_password, str);
