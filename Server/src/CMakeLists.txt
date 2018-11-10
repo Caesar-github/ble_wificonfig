@@ -12,13 +12,13 @@ add_executable(ble_wificonfig
 find_package(PkgConfig)
 pkg_check_modules (GLIB2 glib-2.0 REQUIRED)
 pkg_check_modules (DBUS dbus-1 REQUIRED)
-pkg_check_modules (DBUS-GLIB dbus-glib-1 REQUIRED)
+#pkg_check_modules (DBUS-GLIB dbus-glib-1 REQUIRED)
 include_directories(${GLIB2_INCLUDE_DIRS})
 include_directories(${DBUS_INCLUDE_DIRS})
-include_directories(${DBUS-GLIB_INCLUDE_DIRS})
+#include_directories(${DBUS-GLIB_INCLUDE_DIRS})
 target_link_libraries (ble_wificonfig ${GLIB2_LIBRARIES})
 target_link_libraries (ble_wificonfig ${DBUS_LIBRARIES})
-target_link_libraries (ble_wificonfig ${DBUS-GLIB_LIBRARIES})
+#target_link_libraries (ble_wificonfig ${DBUS-GLIB_LIBRARIES})
 
 install(TARGETS ble_wificonfig DESTINATION bin)
 
